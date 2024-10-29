@@ -1,4 +1,4 @@
-// src/models/User.js
+const bcrypt = require("bcrypt");
 
 class User {
   constructor({
@@ -10,11 +10,17 @@ class User {
     createdAt = new Date(),
   }) {
     this.id = id; // Document ID from Firestore.
-    this.name = name.trim();
+    this.name = name?.trim();
     this.email = email.trim();
     this.password = password.trim();
-    this.pic = pic.trim();
+    this.pic = pic?.trim();
     this.createdAt = createdAt;
+  }
+
+  // Password hashing before saving it onto db
+  async hashPassword() {
+    const saltRounds = parseInt(process.env.SALTROUNDS); // Define the number of salt rounds for hashing
+    this.password = await bcrypt.hash(this.password, saltRounds);
   }
 
   // Convert the user object to Firestore document type.

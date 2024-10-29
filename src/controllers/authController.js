@@ -1,7 +1,8 @@
+const { generateToken } = require("../../us-chat-backend/src/config/generateToken");
 const authService = require("../services/authService");
 const asyncHandler = require("express-async-handler");
 
-// exports.getUsers = async (req, res) => {
+// .getUsers = async (req, res) => {
 //   try {
 //     const users = await userService.getUsers();
 //     res.status(200).json(users);
@@ -11,17 +12,30 @@ const asyncHandler = require("express-async-handler");
 //   }
 // };
 
-exports.registerUser = asyncHandler (async(req, res) => {
+exports.registerUser = asyncHandler(async (req, res) => {
   try {
     const userData = req.body;
     const userId = await authService.registerUser(userData);
 
-    if (!userId) 
-      throw new Error("User registration failed, please retry...!");
+    if (!userId) throw new Error("User registration failed, please retry...!");
 
-    res.status(201).json({ newUserId: userId });  
+    res.status(201).json({ newUserId: userId, accessTokem: generateToken(userId) });
   } catch (error) {
-      res.status(500)
+    res
+      .status(500)
+      .json({ message: "Error Adding users", error: error.message });
+  }
+});
+
+exports.loginUser = asyncHandler( async(req, res) => {
+  try {
+      const userData = req.body;
+      const userDetails = await authService.userLogin(userData);
+      res.status(200).json(userDetails);
+      
+  }
+  catch (error) {
+    res.status(500)
         .json({ message: "Error Adding users", error: error.message });
   }
 });
