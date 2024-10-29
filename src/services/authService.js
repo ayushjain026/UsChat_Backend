@@ -17,7 +17,7 @@ const bcrypt = require("bcrypt");
 
 
 const User = require("../models/userModel");
-const { generateToken } = require("../../us-chat-backend/src/config/generateToken.js");
+const { generateToken } = require("../config/generateToken.js");
 
 //#region 
 

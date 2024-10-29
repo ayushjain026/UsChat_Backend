@@ -22,4 +22,4 @@ app.use("/api/users", userRoutes);
 // Auth Module
 app.use("/api/auth", authRoutes);
 
-module.exports = app;
+module.exports = { app };

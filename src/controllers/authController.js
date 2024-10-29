@@ -1,16 +1,7 @@
-const { generateToken } = require("../../us-chat-backend/src/config/generateToken");
+const { generateToken } = require("../config/generateToken");
 const authService = require("../services/authService");
+const firebaseService = require("../services/firebaseService");
 const asyncHandler = require("express-async-handler");
-
-// .getUsers = async (req, res) => {
-//   try {
-//     const users = await userService.getUsers();
-//     res.status(200).json(users);
-//   } catch (error) {
-//       res.status(404)
-//         .json({ message: "Error fetching users", error: error.message });
-//   }
-// };
 
 exports.registerUser = asyncHandler(async (req, res) => {
   try {
@@ -40,24 +31,17 @@ exports.loginUser = asyncHandler( async(req, res) => {
   }
 });
 
-// exports.updateUser = async (req, res) => {
-//   try {
-//     const userId = req.params.id;
-//     const user = await userService.updateUser(userId, req.body);
-//     res.status(200).json({ user: user }); 
-//   } catch (error) {
-//     res.status(404)
-//         .json({ message: "Error updating users", error: error.message });
-//   }
-// }
 
-// exports.deleteUser = async (req, res) => {
-//   try {
-//     const userId = req.params.id;
-//     const deletedUser = await userService.deleteUser(userId)
-//     res.status(200).json({ message: `user deleted sucessfully` });
-//   } catch (error) {
-//       res.status(500)
-//         .json({ message: "Error deleting users", error: error.message });
-//   }
-// }
+exports.uploadFile = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).send("No file uploaded.");
+    }
+
+    const publicUrl = await firebaseService.uploadFileToFirebase(req.file);
+    res.status(200).send({ publicUrl });
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    res.status(500).send("Failed to upload file.");
+  }
+};
