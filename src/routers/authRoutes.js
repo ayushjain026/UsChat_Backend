@@ -6,7 +6,7 @@ const multer = require("multer");
 const upload = multer();
 
 // User Auth Api's
-router.post("/register", authController.registerUser);
+router.post("/register",upload.single('profilePhoto'), authController.registerUser);
 router.post("/login", authController.loginUser);
 router.post(
   "/upload",

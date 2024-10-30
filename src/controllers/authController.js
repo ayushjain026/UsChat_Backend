@@ -5,7 +5,9 @@ const asyncHandler = require("express-async-handler");
 
 exports.registerUser = asyncHandler(async (req, res) => {
   try {
-    const userData = req.body;
+    const { name, email, password } = req.body;
+    const profilePhoto = req.file;
+    let userData = {name, email, password, profilePhoto};
     const userId = await authService.registerUser(userData);
 
     if (!userId) throw new Error("User registration failed, please retry...!");

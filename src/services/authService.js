@@ -1,3 +1,4 @@
+const bcrypt = require("bcryptjs");
 const { db } = require("../config/firebaseConfig");
 const {
   collection,
@@ -11,56 +12,60 @@ const {
   getDoc,
 } = require("firebase/firestore");
 const userService = require("./usersServices");
-const Pages = require("../enum/pageEnums");
-const { COMMON_VALIDATION, COMMON_ERROR } = require("../enum/validationMsgEnums.ts");
-const bcrypt = require("bcrypt");
+const firebaseService = require("./firebaseService.js");
 
+const Pages = require("../enum/pageEnums");
+const {
+  COMMON_VALIDATION,
+  COMMON_ERROR,
+} = require("../enum/validationMsgEnums");
 
 const User = require("../models/userModel");
 const { generateToken } = require("../config/generateToken.js");
 
-//#region 
+//#region
 
 // Validate that user required fields are not empty.
-const validateUserData = async(user, fromPage) => {
-    let { name, email, password } = user;
-    switch (true) {
-        case Pages.REGISTRATION_PAGE === fromPage :
-            if(!name && !email && !password)
-                throw new Error(COMMON_VALIDATION.RequireAllFields);
-            break;
-        case Pages.LOGIN_PAGE === fromPage :
-            if(!email && !password)
-                throw new Error(COMMON_VALIDATION.registerUser);
-            break;
-        default:
-            throw new Error(COMMON_ERROR.COMMON_VALIDATION);       
-    }
-    
-    return true;
-}
+const validateUserData = async (user, fromPage) => {
+  let { name, email, password } = user;
+  switch (true) {
+    case Pages.REGISTRATION_PAGE === fromPage:
+      if (!name && !email && !password)
+        throw new Error(COMMON_VALIDATION.RequireAllFields);
+      break;
+    case Pages.LOGIN_PAGE === fromPage:
+      if (!email && !password) throw new Error(COMMON_VALIDATION.registerUser);
+      break;
+    default:
+      throw new Error(COMMON_ERROR.COMMON_VALIDATION);
+  }
+
+  return true;
+};
 
 // check user exist or not
-const validateUser = async(user) => {
-    try {
-        const userInfo = query(
-          collection(db, "Users"),
-          where("email", "==", user.email)
-        );
-        const result = await getDocs(userInfo);
-        return result.empty;
-    } catch (error) {
-        throw new Error('Error checking user existence: ' + error.message);
-    }
-}
+const validateUser = async (user) => {
+  try {
+    const userInfo = query(
+      collection(db, "Users"),
+      where("email", "==", user.email)
+    );
+    const result = await getDocs(userInfo);
+    return result.empty;
+  } catch (error) {
+    throw new Error("Error checking user existence: " + error.message);
+  }
+};
 //#endregion
 
-
 exports.registerUser = async (userData) => {
+  userData.profilePhoto = userData.profilePhoto != null ? await firebaseService.uploadFileToFirebase(
+    userData.profilePhoto
+  ) : null;
   const user = new User(userData);
 
   if (validateUserData(user, Pages.REGISTRATION_PAGE)) {
-    return userService.createUser(user);
+    return await userService.createUser(user);
   } else {
     return null;
   }
@@ -93,10 +98,10 @@ exports.userLogin = async ({ email, password }) => {
       id: userDoc.id,
       name: user.name,
       email: user.email,
-      pic: user.pic,
+      profilePhoto: user.profilePhoto,
       createdAt: user.createdAt,
-      accessToken: generateToken(userDoc.id)
-    }
+      accessToken: generateToken(userDoc.id),
+    };
   } catch (error) {
     console.error("Error logging in user:", error);
     throw error;

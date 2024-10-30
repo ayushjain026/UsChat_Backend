@@ -1,38 +1,39 @@
-const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
-class User {
-  constructor({
-    id = null,
-    name,
-    email,
-    password,
-    pic = "https://img.freepik.com/free-vector/illustration-businessman_53876-5856.jpg?w=826&t=st=1729501683~exp=1729502283~hmac=fb3d646cd8008770c4737c97ef508bfd0c7d6403df01c60c28cbb2d541aee33a",
-    createdAt = new Date(),
-  }) {
-    this.id = id; // Document ID from Firestore.
-    this.name = name?.trim();
-    this.email = email.trim();
-    this.password = password.trim();
-    this.pic = pic?.trim();
-    this.createdAt = createdAt;
+const userSchema = mongoose.Schema(
+  {
+    name: { type: "String", required: true },
+    email: { type: "String", unique: true, required: true },
+    password: { type: "String", required: true },
+    pic: {
+      type: "String",
+      required: true,
+      default:
+        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+    },
+    isAdmin: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+  },
+  { timestaps: true }
+);
+
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified) {
+    next();
   }
 
-  // Password hashing before saving it onto db
-  async hashPassword() {
-    const saltRounds = parseInt(process.env.SALTROUNDS); // Define the number of salt rounds for hashing
-    this.password = await bcrypt.hash(this.password, saltRounds);
-  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
 
-  // Convert the user object to Firestore document type.
-  toFirestore() {
-    return {
-      name: this.name,
-      email: this.email,
-      password: this.password,
-      pic: this.pic,
-      createDate: this.createdAt,
-    };
-  }
-}
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;
