@@ -2,10 +2,16 @@ const express = require("express");
 const authController = require("../controllers/authController");
 const router = express.Router();
 
-// User Api's
-router.get("/register", authController.registerUser);
-// router.post("/adduser", userController.addUser);
-// router.put("/update-user/:id", userController.updateUser);
-// router.delete("/delete-user/:id", userController.deleteUser);
+const multer = require("multer");
+const upload = multer();
+
+// User Auth Api's
+router.post("/register",upload.single('profilePhoto'), authController.registerUser);
+router.post("/login", authController.loginUser);
+router.post(
+  "/upload",
+  upload.single("Profile_Photos"),
+  authController.uploadFile
+);
 
 module.exports = router;

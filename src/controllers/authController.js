@@ -1,49 +1,49 @@
+const { generateToken } = require("../config/generateToken");
 const authService = require("../services/authService");
+const firebaseService = require("../services/firebaseService");
 const asyncHandler = require("express-async-handler");
 
-// exports.getUsers = async (req, res) => {
-//   try {
-//     const users = await userService.getUsers();
-//     res.status(200).json(users);
-//   } catch (error) {
-//       res.status(404)
-//         .json({ message: "Error fetching users", error: error.message });
-//   }
-// };
-
-exports.registerUser = asyncHandler (async(req, res) => {
+exports.registerUser = asyncHandler(async (req, res) => {
   try {
-    const userData = req.body;
+    const { name, email, password } = req.body;
+    const profilePhoto = req.file;
+    let userData = {name, email, password, profilePhoto};
     const userId = await authService.registerUser(userData);
 
-    if (!userId) 
-      throw new Error("User registration failed, please retry...!");
+    if (!userId) throw new Error("User registration failed, please retry...!");
 
-    res.status(201).json({ newUserId: userId });  
+    res.status(201).json({ newUserId: userId, accessTokem: generateToken(userId) });
   } catch (error) {
-      res.status(500)
+    res
+      .status(500)
+      .json({ message: "Error Adding users", error: error.message });
+  }
+});
+
+exports.loginUser = asyncHandler( async(req, res) => {
+  try {
+      const userData = req.body;
+      const userDetails = await authService.userLogin(userData);
+      res.status(200).json(userDetails);
+      
+  }
+  catch (error) {
+    res.status(500)
         .json({ message: "Error Adding users", error: error.message });
   }
 });
 
-// exports.updateUser = async (req, res) => {
-//   try {
-//     const userId = req.params.id;
-//     const user = await userService.updateUser(userId, req.body);
-//     res.status(200).json({ user: user }); 
-//   } catch (error) {
-//     res.status(404)
-//         .json({ message: "Error updating users", error: error.message });
-//   }
-// }
 
-// exports.deleteUser = async (req, res) => {
-//   try {
-//     const userId = req.params.id;
-//     const deletedUser = await userService.deleteUser(userId)
-//     res.status(200).json({ message: `user deleted sucessfully` });
-//   } catch (error) {
-//       res.status(500)
-//         .json({ message: "Error deleting users", error: error.message });
-//   }
-// }
+exports.uploadFile = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).send("No file uploaded.");
+    }
+
+    const publicUrl = await firebaseService.uploadFileToFirebase(req.file);
+    res.status(200).send({ publicUrl });
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    res.status(500).send("Failed to upload file.");
+  }
+};

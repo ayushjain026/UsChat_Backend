@@ -14,13 +14,14 @@ exports.getUsers = async () => {
 };
 
 exports.createUser = async (userData) => {
-    let user = new User(userData);
-    const createdUser = await addDoc(
-      collection(db, "Users"),
-      user.toFirestore()
-    );
-    return createdUser.id;
-}
+  let user = new User(userData);
+  await user.hashPassword();
+  const createdUser = await addDoc(
+    collection(db, "Users"),
+    await user.toFirestore()
+  );
+  return createdUser.id;
+};
 
 exports.updateUser = async (id, userData) => {
     let user = new User(userData);
