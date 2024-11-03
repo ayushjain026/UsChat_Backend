@@ -1,8 +1,10 @@
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
-const User = require("../models/userModel");
+const { doc, getDoc } = require("firebase/firestore");
+
 const { db } =  require("../config/firebase");
 const COMMON_VALIDATION = require("../enum/validationMsgEnums");
+const User = require("../models/userModel");
 
 
 exports.protect = asyncHandler(async(req, res, next) => {
@@ -15,10 +17,12 @@ exports.protect = asyncHandler(async(req, res, next) => {
 
             // decode token id.
             const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
-            const user = db.collection("Users").doc(decoded.userId);
-            const userSnapshot = await user.get();
-            if (userSnapshot.exists) {
-                const user = userSnapshot.data();
+            const userRef = doc(db, "Users", decoded.userId);
+            const userDetails = await getDoc(userRef);
+            if (userDetails.exists) {
+                const { password, ...user } = userDetails.data();
+                user.id = userDetails.id;
+                req.user=user;
                 console.log(user);
                 next();
             }

@@ -1,20 +1,53 @@
 const AsyncHandler = require("express-async-handler");
 
-const chatService = require("../services/chatService");
-const Chat = require("../models/chatModel");
-const User = require("../models/userModel");
+const { accessChatForUser, 
+    getAllChatsForUser, 
+    groupChatForUsers
+} = require("../services/chatService");
 
 
 exports.accessChat = AsyncHandler(async (req, res) => {
     try {
         const userId = req.body.userId;
-        const data = await chatService.accessChatForUser(userId);
+        const data = await accessChatForUser(req.user, userId);
         res.status(200).json(data);
     }
     catch (err) {
         res.status(500).send(err.message);
     }
 })
+
+exports.fetchChats = AsyncHandler(async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const data = await getAllChatsForUser(userId);
+        res.status(200).json(data);
+    }
+    catch (err) {
+        res.status(500).send(err.message);
+    }
+})
+
+exports.createGroupChat = async (req, res) => {
+    try {
+        if (!req.body.users || !req.body.name) {
+            return res.status(400).send({ message: "Please fill all the fields" });
+        }
+
+        // Parse users and add the current user as the group admin
+        let users = JSON.parse(req.body.users);
+
+        if (users.length < 2) {
+            return res.status(400).send("More than 2 users are required to form a group chat");
+        }
+        users.push(req.user.id);
+        const newGroup = await groupChatForUsers(req.body.name, users, req.user.id)
+        res.status(200).send(newGroup);
+    }
+    catch (err) {
+        res.status(500).send(json(err.message));
+    }
+}
 
 // exports.accessChat = AsyncHandler(async (req, res) => {
 //   const { userId } = req.body;

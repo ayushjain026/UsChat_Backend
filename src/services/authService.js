@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const { db } = require("../config/firebaseConfig");
+const { db } = require("../config/firebase");
 const {
   collection,
   addDoc,
@@ -22,6 +22,7 @@ const {
 
 const User = require("../models/userModel");
 const { generateToken } = require("../config/generateToken.js");
+const DB_COLLECTION = require("../enum/databaseEnums");
 
 //#region
 
@@ -47,7 +48,7 @@ const validateUserData = async (user, fromPage) => {
 const validateUser = async (user) => {
   try {
     const userInfo = query(
-      collection(db, "Users"),
+      collection(db, DB_COLLECTION.USERS),
       where("email", "==", user.email)
     );
     const result = await getDocs(userInfo);
@@ -74,7 +75,7 @@ exports.registerUser = async (userData) => {
 exports.userLogin = async ({ email, password }) => {
   try {
     const userQuery = query(
-      collection(db, "Users"),
+      collection(db, DB_COLLECTION.USERS),
       where("email", "==", email)
     );
     const userSnapshot = await getDocs(userQuery);
